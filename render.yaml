@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: your-app-name
+    name: kkEnergy
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app
