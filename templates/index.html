@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem;
+        }
+
+        .appliance-card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        .appliance-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-card {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .appliance-prediction {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .btn {
+            border-radius: 8px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+
+        .usage-hours-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .tooltip-icon {
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-bolt me-2"></i>Smart Energy Calculator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about"><i class="fas fa-info-circle me-1"></i>About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact"><i class="fas fa-envelope me-1"></i>Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>Electricity Consumption Calculator
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="predictionForm">
+                        <!-- Family Details Section -->
+                        <div class="mb-4">
+                            <h4>
+                                <i class="fas fa-users me-2"></i>Family Details
+                                <i class="fas fa-info-circle tooltip-icon ms-2" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Enter your family details to get more accurate predictions"></i>
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Total Members</label>
+                                    <input type="number" class="form-control" id="totalMembers" required min="1">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Male Members</label>
+                                    <input type="number" class="form-control" id="maleMembers" required min="0">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Female Members</label>
+                                    <input type="number" class="form-control" id="femaleMembers" required min="0">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Children</label>
+                                    <input type="number" class="form-control" id="children" required min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appliances Section -->
+                        <div class="mb-4">
+                            <h4>
+                                <i class="fas fa-plug me-2"></i>Appliances
+                                <i class="fas fa-info-circle tooltip-icon ms-2" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Add all your electrical appliances here"></i>
+                            </h4>
+                            <div id="appliancesList"></div>
+                            <button type="button" class="btn btn-primary" onclick="addAppliance()">
+                                <i class="fas fa-plus me-2"></i>Add Appliance
+                            </button>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-calculator me-2"></i>Calculate Consumption
+                        </button>
+                    </form>
+
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Calculating your consumption...</p>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="card result-card mt-4" id="resultsCard">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Prediction Results</h4>
+                        </div>
+                        <div class="card-body">
+                            <h5>Total Monthly Consumption: <span id="totalConsumption"></span> kWh</h5>
+                            <div id="applianceResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-bolt me-2"></i>Smart Energy Calculator</h5>
+                    <p>Calculate your monthly electricity consumption accurately and efficiently.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-link me-2"></i>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Home</a></li>
+                        <li><a href="#about" class="text-white">About</a></li>
+                        <li><a href="#contact" class="text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-envelope me-2"></i>Contact Us</h5>
+                    <p>Email: info@smartenergy.com</p>
+                    <p>Phone: +1 234 567 890</p>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p class="mb-0">© 2024 Smart Energy Calculator. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Rest of your existing JavaScript code -->
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        });
+
+        // Show loading spinner during calculation
+        document.getElementById('predictionForm').addEventListener('submit', function() {
+            document.querySelector('.loading-spinner').style.display = 'block';
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add this before </body> -->
+    <script>
+        const applianceBrands = JSON.parse('{{ appliance_brands|tojson|safe }}');
+        let applianceCount = 0;
+
+        function addAppliance() {
+            const appliancesList = document.getElementById('appliancesList');
+            const applianceDiv = document.createElement('div');
+            applianceDiv.className = 'appliance-card position-relative';
+            applianceDiv.innerHTML = `
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Appliance Type</label>
+                        <select class="form-select" onchange="updateBrands(this)" required>
+                            <option value="">Select type...</option>
+                            ${Object.keys(applianceBrands).map(type => 
+                                `<option value="${type}">${type}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Brand</label>
+                        <select class="form-select" onchange="updateModels(this)" required>
+                            <option value="">Select brand...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Model</label>
+                        <select class="form-select" required>
+                            <option value="">Select model...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" required min="1" value="1" onchange="updateUsageHours(this)">
+                    </div>
+                </div>
+                <div class="row usage-hours-container" id="usageHours${applianceCount}">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Usage Hours (Unit 1)</label>
+                        <input type="number" class="form-control usage-hours" required min="0" max="24" step="0.1">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-danger btn-remove" onclick="this.parentElement.remove()">
+                    <i class="fas fa-trash me-1"></i>Remove
+                </button>
+            `;
+            appliancesList.appendChild(applianceDiv);
+            applianceCount++;
+        }
+
+        function updateBrands(select) {
+            const brandSelect = select.parentElement.nextElementSibling.querySelector('select');
+            const modelSelect = brandSelect.parentElement.nextElementSibling.querySelector('select');
+            const selectedType = select.value;
+            const brands = Object.keys(applianceBrands[selectedType] || {});
+            
+            brandSelect.innerHTML = '<option value="">Select brand...</option>' +
+                brands.map(brand => `<option value="${brand}">${brand}</option>`).join('');
+            
+            modelSelect.innerHTML = '<option value="">Select model...</option>';
+        }
+
+        function updateModels(select) {
+            const applianceType = select.parentElement.previousElementSibling.querySelector('select').value;
+            const brand = select.value;
+            const modelSelect = select.parentElement.nextElementSibling.querySelector('select');
+            const models = applianceBrands[applianceType][brand] || [];
+            
+            modelSelect.innerHTML = '<option value="">Select model...</option>' +
+                models.map(model => `<option value="${model}">${model}</option>`).join('');
+        }
+
+        function updateUsageHours(quantityInput) {
+            const container = quantityInput.closest('.row').nextElementSibling;
+            const quantity = parseInt(quantityInput.value) || 1;
+            
+            container.innerHTML = '';
+            for (let i = 0; i < quantity; i++) {
+                container.innerHTML += `
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Usage Hours (Unit ${i + 1})</label>
+                        <input type="number" class="form-control usage-hours" required min="0" max="24" step="0.1">
+                    </div>
+                `;
+            }
+        }
+
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const totalMembers = parseInt(document.getElementById('totalMembers').value);
+                
+                // Determine household type based on total members
+                let householdType;
+                if (totalMembers === 1) {
+                    householdType = 'bachelor';
+                } else if (totalMembers === 2) {
+                    householdType = 'couple';
+                } else if (totalMembers <= 4) {
+                    householdType = 'nuclear';
+                } else {
+                    householdType = 'joint';
+                }
+                
+                const familyDetails = {
+                    totalMembers: document.getElementById('totalMembers').value,
+                    maleMembers: document.getElementById('maleMembers').value,
+                    femaleMembers: document.getElementById('femaleMembers').value,
+                    children: document.getElementById('children').value,
+                    householdType: householdType
+                };
+
+                // Validate total members matches sum of members
+                const totalCalculated = parseInt(familyDetails.maleMembers) + 
+                                      parseInt(familyDetails.femaleMembers) + 
+                                      parseInt(familyDetails.children);
+                                      
+                if (totalCalculated !== parseInt(familyDetails.totalMembers)) {
+                    alert('Total members should equal sum of male, female and children!');
+                    return;
+                }
+
+                // Show loading spinner
+                document.querySelector('.loading-spinner').style.display = 'block';
+
+                const appliances = Array.from(document.querySelectorAll('.appliance-card')).map(card => {
+                    const usageHours = Array.from(card.querySelectorAll('.usage-hours'))
+                        .map(input => parseFloat(input.value));
+                    
+                    return {
+                        type: card.querySelector('select').value,
+                        brand: card.querySelectorAll('select')[1].value,
+                        model: card.querySelectorAll('select')[2].value,
+                        quantity: parseInt(card.querySelectorAll('input')[0].value),
+                        avgUsageHours: usageHours.reduce((a, b) => a + b, 0) / usageHours.length
+                    };
+                });
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        familyDetails,
+                        appliances
+                    })
+                });
+
+                const result = await response.json();
+                
+                // Hide loading spinner
+                document.querySelector('.loading-spinner').style.display = 'none';
+                
+                if (result.success) {
+                    document.getElementById('resultsCard').style.display = 'block';
+                    document.getElementById('totalConsumption').textContent = result.total_consumption;
+                    
+                    const applianceResults = document.getElementById('applianceResults');
+                    applianceResults.innerHTML = result.appliance_predictions.map(pred => `
+                        <div class="appliance-prediction">
+                            <i class="fas fa-plug me-2"></i>
+                            ${pred.type}: ${pred.consumption} kWh
+                        </div>
+                    `).join('');
+                } else {
+                    alert(result.error || 'Error making prediction');
+                }
+            } catch (error) {
+                // Hide loading spinner on error
+                document.querySelector('.loading-spinner').style.display = 'none';
+                alert(error.message || 'Error making prediction. Please try again.');
+            }
+        });
+
+        // Add validation for family members
+        document.querySelectorAll('#totalMembers, #maleMembers, #femaleMembers, #children').forEach(input => {
+            input.addEventListener('change', () => {
+                const total = document.getElementById('totalMembers');
+                const male = document.getElementById('maleMembers');
+                const female = document.getElementById('femaleMembers');
+                const children = document.getElementById('children');
+                
+                const sum = parseInt(male.value || 0) + parseInt(female.value || 0) + parseInt(children.value || 0);
+                if (sum > parseInt(total.value)) {
+                    alert('Sum of male, female and children cannot exceed total members!');
+                    input.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
